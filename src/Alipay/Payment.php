@@ -4,6 +4,7 @@ namespace Dreamboy\Easypay\Alipay;
 use Alipay\EasySDK\Kernel\Config;
 use Alipay\EasySDK\Kernel\Factory;
 use Alipay\EasySDK\Kernel\Util\ResponseChecker;
+use Alipay\EasySDK\Payment\Huabei\Models\HuabeiConfig;
 use Dreamboy\Easypay\Kernel\BasePayment;
 
 /**
@@ -13,19 +14,11 @@ use Dreamboy\Easypay\Kernel\BasePayment;
 class Payment extends BasePayment
 {
     /**
-     * 交易类型
-     * @var string
-     */
-    protected $tradeType = 'app'; // 默认是APP支付
-
-    /**
      * Payment constructor.
      * @param array $config 支付配置
      */
     public function __construct($config)
     {
-        $this->tradeType = $config['trade_type'] ?? 'app';
-
         Factory::setOptions($this->setConfig($config));
     }
 
@@ -61,11 +54,48 @@ class Payment extends BasePayment
      * @return string
      * @throws \Exception
      */
-    public function prepay($subject, $outTradeNo, $totalAmount)
+    public function prepay($data, $tradeType = 'app', $isHuabei = false)
     {
-        switch ($this->tradeType) {
+        $subject = $data['subject'] ?? '';
+        $outTradeNo = $data['out_trade_no'] ?? '';
+        $totalAmount = $data['total_amount'] ?? '';
+
+        switch ($tradeType) {
             case 'app':
-                $result = Factory::payment()->app()->pay($subject, $outTradeNo, $totalAmount);
+                $app = Factory::payment()->app();
+                if ($isHuabei) {
+                    $app->optional('enable_pay_channels', 'pcredit');
+                }
+
+                $result = $app->pay($subject, $outTradeNo, $totalAmount);
+                break;
+            case 'wap':
+                $quitUrl = $data['quit_url'] ?? '';
+                $returnUrl = $data['return_url'] ?? '';
+
+                $wap = Factory::payment()->wap();
+                if ($isHuabei) {
+                    $wap->optional('enable_pay_channels', 'pcredit');
+                }
+
+                $result = $wap->pay($subject, $outTradeNo, $totalAmount, $quitUrl, $returnUrl);
+                break;
+            case 'faceToFace':
+                $authCode = $data['auth_code'] ?? '';
+                $result = Factory::payment()->faceToFace()->pay($subject, $outTradeNo, $totalAmount, $authCode);
+                break;
+            case 'huabei':
+                $buyerId = $data['buyer_id'] ?? '';
+                $extendParams = HuabeiConfig::fromMap([
+                    'hb_fq_num' => $data['hb_fq_num'] ?? 0,
+                    'hb_fq_seller_percent' => $data['hb_fq_seller_percent'] ?? 100
+                ]);
+
+                $result = Factory::payment()->huabei()->create($subject, $outTradeNo, $totalAmount, $buyerId, $extendParams);
+                break;
+            case 'page':
+                $returnUrl = $data['return_url'] ?? '';
+                $result = Factory::payment()->page()->pay($subject, $outTradeNo, $totalAmount, $returnUrl);
                 break;
             default:
                 throw new \Exception('当前支付方式暂不支持');
