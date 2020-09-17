@@ -56,9 +56,9 @@ class Payment extends BasePayment
      */
     public function prepay($data, $tradeType = 'app', $isHuabei = false)
     {
-        $subject = $data['subject'] ?? '';
-        $outTradeNo = $data['out_trade_no'] ?? '';
-        $totalAmount = $data['total_amount'] ?? '';
+        $subject = $data['subject'];
+        $outTradeNo = $data['out_trade_no'];
+        $totalAmount = $data['total_amount'];
 
         switch ($tradeType) {
             case 'app':
@@ -70,8 +70,8 @@ class Payment extends BasePayment
                 $result = $app->pay($subject, $outTradeNo, $totalAmount);
                 break;
             case 'wap':
-                $quitUrl = $data['quit_url'] ?? '';
-                $returnUrl = $data['return_url'] ?? '';
+                $quitUrl = $data['quit_url'];
+                $returnUrl = $data['return_url'];
 
                 $wap = Factory::payment()->wap();
                 if ($isHuabei) {
@@ -81,14 +81,14 @@ class Payment extends BasePayment
                 $result = $wap->pay($subject, $outTradeNo, $totalAmount, $quitUrl, $returnUrl);
                 break;
             case 'faceToFace':
-                $authCode = $data['auth_code'] ?? '';
+                $authCode = $data['auth_code'];
                 $result = Factory::payment()->faceToFace()->pay($subject, $outTradeNo, $totalAmount, $authCode);
                 break;
             case 'huabei':
                 $buyerId = $data['buyer_id'] ?? '';
                 $extendParams = HuabeiConfig::fromMap([
-                    'hb_fq_num' => $data['hb_fq_num'] ?? 0,
-                    'hb_fq_seller_percent' => $data['hb_fq_seller_percent'] ?? 100
+                    'hb_fq_num' => $data['hb_fq_num'],
+                    'hb_fq_seller_percent' => $data['hb_fq_seller_percent']
                 ]);
 
                 $result = Factory::payment()->huabei()->create($subject, $outTradeNo, $totalAmount, $buyerId, $extendParams);
