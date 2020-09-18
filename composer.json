@@ -9,6 +9,7 @@
         }
     ],
     "require": {
+        "php": "^7.0",
         "overtrue/wechat": "~4.0",
         "guzzlehttp/guzzle": "6.5",
         "alipaysdk/easysdk": "2.0"
