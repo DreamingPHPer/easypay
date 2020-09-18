@@ -1,5 +1,6 @@
 {
     "name": "dreamboy/easypay",
+    "description": "此组件旨在帮助你快速接入各种支付，让支付接入变得更加简单。",
     "type": "library",
     "authors": [
         {
